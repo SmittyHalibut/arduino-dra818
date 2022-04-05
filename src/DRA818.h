@@ -41,7 +41,7 @@
 #define DRA818_UHF_MAX    470.0
 #define DRA818_12K5       0x0
 #define DRA818_25K        0x1
-//#define DRA818_DEBUG
+#define DRA818_DEBUG
 
 class DRA818 {
     public:
@@ -56,6 +56,7 @@ class DRA818 {
         int scan(float freq);
         int volume(uint8_t volume);
         int filters(bool pre, bool high, bool low);
+        int tail(bool enabled);
         int rssi();
 
 
