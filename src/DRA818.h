@@ -55,6 +55,7 @@ class DRA818 {
         int handshake();
         int scan(float freq);
         int volume(uint8_t volume);
+        int power(bool high_power);
         int filters(bool pre, bool high, bool low);
         int tail(bool enabled);
         int rssi();
@@ -77,6 +78,7 @@ class DRA818 {
         uint8_t type;
 
         int read_response();
+        void clear_rx_buffer();
 
         static DRA818* configure(DRA818 *dra, float freq_rx, float freq_tx, uint8_t squelch, uint8_t volume, uint8_t ctcss_rx, uint8_t ctcss_tx, uint8_t bandwidth, bool pre, bool high, bool low, Stream *log = NULL);
 };

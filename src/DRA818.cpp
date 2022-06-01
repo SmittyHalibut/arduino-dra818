@@ -51,6 +51,7 @@ DRA818::DRA818(HardwareSerial *serial, uint8_t type) {
   serial->begin(SERIAL_SPEED, SERIAL_CONFIG);
   this->init((Stream *)serial, type);
 }
+
 DRA818::DRA818(SoftwareSerial *serial, uint8_t type) {
   serial->begin(SERIAL_SPEED); // We can't configure bits/parity for SoftwareSerial, it's 8N1 as the DRA818
   this->init((Stream *)serial, type);
@@ -58,6 +59,8 @@ DRA818::DRA818(SoftwareSerial *serial, uint8_t type) {
 
 void DRA818::init(Stream *serial, uint8_t type) {
   this->serial = serial;
+  clear_rx_buffer();
+  
 #ifdef DRA818_DEBUG
   this->log = NULL;
 #endif
@@ -70,6 +73,12 @@ void DRA818::set_log(Stream *log) {
   LOG(println, F("DRA818: log serial connection active"));
 }
 #endif
+
+void DRA818::clear_rx_buffer() {
+  while(this->serial->available()) {
+    this->serial->read();
+  }
+}
 
 int DRA818::read_response() {
   char ack[3];
@@ -88,8 +97,11 @@ int DRA818::read_response() {
     }
   } while (ack[2] != 0xa && (millis() - start) < TIMEOUT);
 #ifdef DRA818_DEBUG
-  if (ack[2] != 0xa) LOG(write, F("\r\n"));
+  //if (ack[2] != 0xa) LOG(write, F("\r\n"));
 #endif
+  if ((millis() - start) >= TIMEOUT) {
+    LOG(println, F("Timed out"));
+  }
   LOG(print, F("Returned value="));
   LOG(println, ack[0] == '0' );
 
@@ -123,6 +135,7 @@ int DRA818::group(uint8_t bw, float freq_tx, float freq_rx, uint8_t ctcss_tx, ui
 
   LOG(println, F("DRA818::group"));
   LOG(print, F("-> "));
+  clear_rx_buffer();
   SEND(buffer);
 
   return this->read_response();
@@ -180,6 +193,18 @@ int DRA818::tail(bool enabled) {
 
   SEND("AT+SETTAIL=");
   SEND(enabled ? "1" : "0");
+  SEND("\r\n");
+
+  return read_response();
+}
+
+int DRA818::power(bool high_power) {
+  LOG(println, F("DRA818::power"));
+  LOG(print, F("-> "));
+
+  SEND("AT+SETTXPOWER=");
+  SEND(high_power ? "0" : "1");  // Yes, 0 is high power, 1 is low power.
+  SEND("\r\n");
 
   return read_response();
 }
